@@ -142,6 +142,5 @@ def actualizar_dashboard(n):
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
-    app.run_server(debug=True)
-    port = int(os.environ.get("PORT", 8050))
-    app.run_server(host='0.0.0.0', port=port)
+    port = int(os.environ.get("PORT", 8050))  # Establece el puerto desde la variable de entorno
+    app.run_server(host='0.0.0.0', port=port, debug=True)  # Ejecuta la app
