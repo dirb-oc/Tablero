@@ -30,6 +30,12 @@ def obtener_datos():
     df['time'] = pd.to_datetime(df['time'])
     return df
 
+# Función para obtener datos de usuarios
+def obtener_usuarios():
+    url = "https://api-medicion.onrender.com/users"
+    response = requests.get(url)
+    return response.json() if response.status_code == 200 else []
+
 # Layout de la aplicación
 app.layout = html.Div([
     html.H1("Dashboard", style={"text-align": "center", "color": "#339"}),
@@ -62,39 +68,57 @@ app.layout = html.Div([
         ], className="card", style={"padding": "20px", "border-radius": "8px", "background-color": "#f4f4f8", "width": "30%", "margin": "10px"}),
 
         html.Div([
-            html.H3("Ultimo registro del Aire", style={"margin-bottom": "5px", "text-align": "center"}),
+            html.H3("Última Calidad del Aire", style={"margin-bottom": "5px", "text-align": "center"}),
             html.P(id="air-quality", style={"font-size": "36px", "font-weight": "bold", "text-align": "center"}),
         ], className="card", style={"padding": "20px", "border-radius": "8px", "background-color": "#f4f4f8", "width": "30%", "margin": "10px"}),
-        
+
     ], style={"display": "flex", "flex-wrap": "wrap", "justify-content": "space-around", "padding": "20px"}),
 
-    # Gráficos de temperatura, humedad y calidad del aire en barras con fondo blanco
-    html.Div([
-        dcc.Graph(id="temp-chart", style={"flex": "1", "padding": "10px"}),
-        dcc.Graph(id="hum-chart", style={"flex": "1", "padding": "10px"}),
-        dcc.Graph(id="air-quality-chart", style={"flex": "1", "padding": "10px"})
-    ], style={"display": "flex", "justify-content": "space-around", "padding": "20px", "background-color": "#e9ecef", "border-radius": "8px"}),
+    # Gráficos de temperatura, humedad y calidad del aire (uno debajo del otro)
+    dcc.Graph(id="temp-chart", style={"width": "100%", "padding": "10px", "background-color": "#e9ecef", "border-radius": "8px"}),
+    dcc.Graph(id="hum-chart", style={"width": "100%", "padding": "10px", "background-color": "#e9ecef", "border-radius": "8px"}),
+    dcc.Graph(id="air-quality-chart", style={"width": "100%", "padding": "10px", "background-color": "#e9ecef", "border-radius": "8px"}),
 
     # Mapa de ubicación del dispositivo
     html.Div([
         dcc.Graph(id="mapa-ubicacion", style={"width": "100%", "height": "500px"})
     ], style={"padding": "20px", "background-color": "#f9f9f9", "border-radius": "8px"}),
 
+    # Tarjetas de cantidad de dispositivos, registros y usuarios
+    html.Div([
+        html.Div([
+            html.H3("Cantidad de Dispositivos", style={"margin-top": "15px", "text-align": "center"}),
+            html.P(id="device-count", style={"font-size": "36px", "font-weight": "bold", "text-align": "center"}),
+        ], className="card", style={"padding": "20px", "border-radius": "8px", "background-color": "#f4f4f8", "width": "30%", "margin": "10px"}),
+
+        html.Div([
+            html.H3("Cantidad de Registros", style={"margin-top": "15px", "text-align": "center"}),
+            html.P(id="record-count", style={"font-size": "36px", "font-weight": "bold", "text-align": "center"}),
+        ], className="card", style={"padding": "20px", "border-radius": "8px", "background-color": "#f4f4f8", "width": "30%", "margin": "10px"}),
+
+        html.Div([
+            html.H3("Cantidad de Usuarios", style={"margin-top": "15px", "text-align": "center"}),
+            html.P(id="user-count", style={"font-size": "36px", "font-weight": "bold", "text-align": "center"}),
+        ], className="card", style={"padding": "20px", "border-radius": "8px", "background-color": "#f4f4f8", "width": "30%", "margin": "10px"}),
+
+    ], style={"display": "flex", "flex-wrap": "wrap", "justify-content": "space-around", "padding": "20px"}),
+
     # Intervalo para actualizar datos cada 60 segundos
     dcc.Interval(id="interval-component", interval=60000, n_intervals=0)
-    
+
 ], style={"font-family": "Arial, sans-serif", "background-color": "#f9f9f9", "padding": "20px"})
 
 # Callback para actualizar gráficos, tarjetas y mapa
 @app.callback(
     [
         Output("temp-chart", "figure"), Output("hum-chart", "figure"),
-        Output("air-quality-chart", "figure"),  # Salida para calidad del aire
+        Output("air-quality-chart", "figure"),
         Output("temp-average", "children"), Output("temp-last", "children"),
         Output("hum-average", "children"), Output("hum-last", "children"),
-        Output("air-quality", "children"),  # Salida para calidad del aire
-        Output("air_avg", "children"),
-        Output("mapa-ubicacion", "figure")
+        Output("air-quality", "children"), Output("air_avg", "children"),
+        Output("mapa-ubicacion", "figure"),
+        Output("device-count", "children"), Output("record-count", "children"),
+        Output("user-count", "children")
     ],
     [Input("interval-component", "n_intervals")]
 )
@@ -103,55 +127,35 @@ def actualizar_dashboard(n):
     df = obtener_datos()
     dispositivos = obtener_dispositivos()
     ubicaciones = obtener_ubicaciones()
+    usuarios = obtener_usuarios()
 
     # Filtrar datos para temperatura, humedad y calidad del aire
-    df_temp = df[df["sensor_id"] == 1]  # Temperatura
-    df_hum = df[df["sensor_id"] == 2]   # Humedad
-    df_air = df[df["sensor_id"] == 3]   # Calidad del aire
+    df_temp = df[df["sensor_id"] == 1]
+    df_hum = df[df["sensor_id"] == 2]
+    df_air = df[df["sensor_id"] == 3]
 
     # Calcular promedios y últimos valores
     temp_avg = df_temp["value"].mean() if not df_temp.empty else "N/A"
     temp_last = df_temp["value"].iloc[-1] if not df_temp.empty else "N/A"
     hum_avg = df_hum["value"].mean() if not df_hum.empty else "N/A"
     hum_last = df_hum["value"].iloc[-1] if not df_hum.empty else "N/A"
-    air_avg = df_air["value"].mean() if not df_air.empty else "N/A"  # Promedio de calidad del aire
-    air_quality = df_air["value"].iloc[-1] if not df_air.empty else "N/A"  # Último valor de calidad del aire
+    air_avg = df_air["value"].mean() if not df_air.empty else "N/A"
+    air_last = df_air["value"].iloc[-1] if not df_air.empty else "N/A"
 
-    # Configurar gráfico de temperatura en barras con fondo blanco
-    fig_temp = go.Figure(
-        data=[go.Bar(x=df_temp["time"], y=df_temp["value"], name="Temperatura", marker_color='red')],
-        layout=go.Layout(
-            title="Registro de Temperatura",
-            xaxis=dict(title="Tiempo"),
-            yaxis=dict(title="Temperatura (°C)"),
-            plot_bgcolor='white',
-            template="plotly_white"
-        )
-    )
+    # Cantidades de dispositivos, registros y usuarios
+    device_count = len(dispositivos)
+    record_count = len(df)
+    user_count = len(usuarios)
 
-    # Configurar gráfico de humedad en barras con fondo blanco
-    fig_hum = go.Figure(
-        data=[go.Bar(x=df_hum["time"], y=df_hum["value"], name="Humedad", marker_color='blue')],
-        layout=go.Layout(
-            title="Registro de Humedad",
-            xaxis=dict(title="Tiempo"),
-            yaxis=dict(title="Humedad (%)"),
-            plot_bgcolor='white',
-            template="plotly_white"
-        )
-    )
+    # Crear gráficos de barras para cada sensor
+    fig_temp = go.Figure(data=[go.Bar(x=df_temp["time"], y=df_temp["value"], name="Temperatura", marker_color="#FF5733")])
+    fig_hum = go.Figure(data=[go.Bar(x=df_hum["time"], y=df_hum["value"], name="Humedad", marker_color="#33FF57")])
+    fig_air = go.Figure(data=[go.Bar(x=df_air["time"], y=df_air["value"], name="Calidad del Aire", marker_color="#3357FF")])
 
-    # Configurar gráfico de calidad del aire en barras con fondo blanco
-    fig_air_quality = go.Figure(
-        data=[go.Bar(x=df_air["time"], y=df_air["value"], name="Calidad del Aire", marker_color='green')],
-        layout=go.Layout(
-            title="Registro de Calidad del Aire",
-            xaxis=dict(title="Tiempo"),
-            yaxis=dict(title="Calidad del Aire (Valor)"),
-            plot_bgcolor='white',
-            template="plotly_white"
-        )
-    )
+    # Configuración de gráficos
+    fig_temp.update_layout(title="Temperatura", xaxis_title="Tiempo", yaxis_title="Valor")
+    fig_hum.update_layout(title="Humedad", xaxis_title="Tiempo", yaxis_title="Valor")
+    fig_air.update_layout(title="Calidad del Aire", xaxis_title="Tiempo", yaxis_title="Valor")
 
     # Configurar mapa con ubicaciones de dispositivos
     fig_mapa = go.Figure()
@@ -179,7 +183,7 @@ def actualizar_dashboard(n):
         margin=dict(l=0, r=0, t=40, b=0)
     )
 
-    return fig_temp, fig_hum, fig_air_quality, temp_avg, temp_last, hum_avg, hum_last, air_quality, air_avg, fig_mapa
+    return (fig_temp, fig_hum, fig_air, temp_avg, temp_last, hum_avg, hum_last, air_last, air_avg, fig_mapa, device_count, record_count, user_count)
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
