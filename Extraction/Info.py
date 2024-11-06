@@ -1,5 +1,4 @@
 import requests
-import pandas as pd
 
 def obtener_ubicaciones():
     url = "https://api-medicion.onrender.com/locations"
@@ -16,10 +15,7 @@ def obtener_dispositivos():
 def obtener_datos():
     url = "https://api-medicion.onrender.com/records"
     response = requests.get(url)
-    data = response.json()
-    df = pd.DataFrame(data)
-    df['time'] = pd.to_datetime(df['time'])
-    return df
+    return response.json() if response.status_code == 200 else []
 
 # Función para obtener datos de usuarios
 def obtener_usuarios():
