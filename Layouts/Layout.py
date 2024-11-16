@@ -21,7 +21,15 @@ def Grafica(df_sensor, sensor):
         [
             dcc.Graph(
                 figure=go.Figure(
-                    data=[go.Bar(x=df_sensor["time"], y=df_sensor["value"], marker_color="#2596be")],
+                    data=[
+                        go.Scatter(
+                            x=df_sensor["time"], 
+                            y=df_sensor["value"], 
+                            mode="lines+markers",  # Modo línea con puntos
+                            line=dict(color="#000"),  # Color de la línea
+                            marker=dict(size=5, color="#1ebeee")  # Configuración de los puntos
+                        )
+                    ],
                     layout=go.Layout(
                         title=f"Registro de {sensor['sensor_name']} - {sensor['function']}",
                         xaxis={"title": "Time"},
@@ -29,7 +37,12 @@ def Grafica(df_sensor, sensor):
                         template="plotly_white"
                     )
                 ),
-                style={"width": "100%", "padding": "10px", "background-color": "#e9ecef", "border-radius": "8px"}
+                style={
+                    "width": "100%",
+                    "padding": "10px",
+                    "background-color": "#e9ecef",
+                    "border-radius": "8px"
+                }
             )
         ],
         style={"margin-bottom": "20px"}  # Estilo para el espaciado entre gráficos
