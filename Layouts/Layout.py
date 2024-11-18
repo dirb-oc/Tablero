@@ -27,7 +27,7 @@ def Grafica(df_sensor, sensor):
                             y=df_sensor["value"], 
                             mode="lines+markers",  # Modo línea con puntos
                             line=dict(color="#000"),  # Color de la línea
-                            marker=dict(size=5, color="#1ebeee")  # Configuración de los puntos
+                            marker=dict(size=5, color="#06262f")  # Configuración de los puntos
                         )
                     ],
                     layout=go.Layout(

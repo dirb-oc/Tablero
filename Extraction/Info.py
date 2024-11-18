@@ -1,39 +1,42 @@
-import requests
+from sqlalchemy import create_engine
+import pandas as pd
 
+# Configuración de la conexión a la base de datos
+DATABASE_URL = "postgresql+psycopg2://orlando:2TNKEuccZQY02IV0KQxENy7sykDingap@dpg-csgsgibtq21c73dv2fm0-a.oregon-postgres.render.com:5432/mediciondb"
+engine = create_engine(DATABASE_URL)
+
+# Función para obtener ubicaciones
 def obtener_ubicaciones():
-    url = "https://api-medicion.onrender.com/locations"
-    data = requests.get(url)
-    return data.json() if data.status_code == 200 else []
+    query = "SELECT * FROM locations"
+    return pd.read_sql_query(query, engine).to_dict(orient="records")
 
-# Función para obtener datos de los dispositivos desde la API
+# Función para obtener dispositivos
 def obtener_dispositivos():
-    url = "https://api-medicion.onrender.com/devices"
-    data = requests.get(url)
-    return data.json() if data.status_code == 200 else []
+    query = "SELECT * FROM devices"
+    return pd.read_sql_query(query, engine).to_dict(orient="records")
 
-# Función para obtener y procesar los datos de sensores
+# Función para obtener datos de sensores
 def obtener_datos():
-    url = "https://api-medicion.onrender.com/records"
-    response = requests.get(url)
-    return response.json() if response.status_code == 200 else []
+    query = "SELECT * FROM record"
+    return pd.read_sql_query(query, engine).to_dict(orient="records")
 
 # Función para obtener datos de usuarios
 def obtener_usuarios():
-    url = "https://api-medicion.onrender.com/users"
-    response = requests.get(url)
-    return response.json() if response.status_code == 200 else []
+    query = "SELECT * FROM users"
+    return pd.read_sql_query(query, engine).to_dict(orient="records")
 
+# Función para obtener unidades de medida
 def obtener_Medidas():
-    url = "https://api-medicion.onrender.com/units"
-    response = requests.get(url)
-    return response.json() if response.status_code == 200 else []
+    query = "SELECT * FROM units"
+    return pd.read_sql_query(query, engine).to_dict(orient="records")
 
+# Función para obtener sensores
 def obtener_Sensores():
-    url = "https://api-medicion.onrender.com/sensors"
-    response = requests.get(url)
-    return response.json() if response.status_code == 200 else []
+    query = "SELECT * FROM sensor"
+    return pd.read_sql_query(query, engine).to_dict(orient="records")
 
+# Función para obtener relaciones
 def obtener_Relacion():
-    url = "https://api-medicion.onrender.com/relations"
-    response = requests.get(url)
-    return response.json() if response.status_code == 200 else []
+    query = "SELECT * FROM user_device"
+    return pd.read_sql_query(query, engine).to_dict(orient="records")
+
